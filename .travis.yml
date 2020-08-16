@@ -1,0 +1,25 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t grumpygk/react-test -f ./client/Dockefile.dev ./client
+
+scripts:
+    - docker run -e CI=true grumpygk/react-test npm test 
+
+after_success:
+    - docker build -t grumpygk/multi-client ./client
+    - docker build -t grumpygk/multi-nginx ./nginx
+    - docker build -t grumpygk/multi-server ./server
+    - docker build -t grumpygk/multi-worker ./worker
+
+    #Log into the docker cli
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+    #Take images and oush them to docker hub
+    - docker push grumpygk/multi-client
+    - docker push grumpygk/multi-nginx
+    - docker push grumpygk/multi-server
+    - docker push grumpygk/multi-worker
+    
